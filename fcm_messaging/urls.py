@@ -9,10 +9,8 @@ from .views import (
 )
 
 urlpatterns = [
-    path("upload/", CertificateUploadView.as_view(), name="upload-certificate"),
-    path("certificates/", CertificateDetailView.as_view(), name="certificate-detail"),
-    path("certificates/<int:pk>/", CertificateDetailView.as_view(), name="certificate-detail-pk"),
-    path("device-group/", DeviceGroupView.as_view(), name="device-group"),
-    path("send-notification-group/", SendNotificationGroupView.as_view(), name="send-notification-group"),
-    path("send-notification-device/", SendNotificationDeviceView.as_view(), name="send-notification-device"),
+    path("fcm-config/upload/", CertificateUploadView.as_view(), name="upload-certificate"),
+    path("fcm-config/device-group/", DeviceGroupView.as_view(), name="device-group"),
+    path("fcm-config/send-notification-group/", SendNotificationGroupView.as_view(), name="send-notification-group"),
+    path("fcm-config/send-notification-device/", SendNotificationDeviceView.as_view(), name="send-notification-device"),
 ]

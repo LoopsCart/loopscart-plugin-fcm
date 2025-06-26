@@ -27,8 +27,22 @@ from .serializers import FCMCertificateSerializer
 #    Data: { "device_token": token, "title": title, "body": body }
 
 
+
 class CertificateUploadView(APIView):
     parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request):
+        cert_instances = FCMCertificate.objects.all()
+        serializer = FCMCertificateSerializer(cert_instances, many=True)
+        data = [
+            {
+                "id": cert["id"],
+                "name": cert["name"],
+                "certificate_json": cert["certificate_json"]
+            }
+            for cert in serializer.data
+        ]
+        return Response(data)
 
     def post(self, request):
         if FCMCertificate.objects.exists():
@@ -36,19 +50,38 @@ class CertificateUploadView(APIView):
                 {"error": "Only one FCM certificate can be uploaded."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         serializer = FCMCertificateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request):
-        cert_instances = FCMCertificate.objects.all()
-        serializer = FCMCertificateSerializer(cert_instances, many=True)
-        data = [{"id": cert["id"], "name": cert["name"]} for cert in serializer.data]
-        return Response(data)
+    def put(self, request):
+        cert_instance = FCMCertificate.objects.first()
+        if not cert_instance:
+            return Response({"error": "No certificate found to update."}, status=status.HTTP_404_NOT_FOUND)
 
+        serializer = FCMCertificateSerializer(cert_instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        cert_instance = FCMCertificate.objects.first()
+        if not cert_instance:
+            return Response({"error": "No certificate found to update."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = FCMCertificateSerializer(cert_instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request):
+        return Response(
+            {"error": "Deleting the certificate is not allowed."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
 class CertificateDetailView(APIView):
     def get(self, request, pk):
