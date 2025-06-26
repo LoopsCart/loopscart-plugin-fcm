@@ -1,7 +1,7 @@
 import json
 
 import firebase_admin
-from firebase_admin import credentials, messaging
+from firebase_admin import messaging
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
@@ -86,14 +86,11 @@ def initialize_firebase_app():
         if not cert_instance or not cert_instance.certificate_json:
             return False, "No FCM certificate found or certificate JSON is missing."
         try:
-            cred_dict = json.loads(cert_instance.certificate_json.read())
-            cred = credentials.Certificate(cred_dict)
+            cred = firebase_admin.credentials.Certificate(cert_instance.certificate_json)
             firebase_admin.initialize_app(cred)
             return True, None
-        except FileNotFoundError:
-            return False, "FCM certificate file not found."
         except json.JSONDecodeError:
-            return False, "Invalid JSON format in FCM certificate file."
+            return False, "Invalid JSON format in FCM certificate."
         except Exception as e:
             return False, f"Failed to initialize Firebase: {str(e)}"
     return True, None
@@ -127,7 +124,7 @@ class DeviceGroupView(APIView):
             elif action == "unsubscribe":
                 response = messaging.unsubscribe_from_topic(device_token, group_name)
 
-            return Response({"message": "Device token has been {} from {}".format(action, group_name)})
+            return Response({"message": "Device token has been {} from {}".format(action, group_name), "response": response})
         except Exception as e:
             return Response(
                 {"error": f"Failed to {action} device token from group: {str(e)}"},
@@ -149,7 +146,10 @@ class SendNotificationGroupView(APIView):
 
         initialized, error_message = initialize_firebase_app()
         if not initialized:
-            return Response({"error": error_message}, status=500)
+            return Response(
+                {"status": "failed", "error": error_message}, 
+                status=status.HTTP_200_OK  # <-- returning 200 even on init failure
+            )
 
         try:
             message = messaging.Message(
@@ -158,9 +158,19 @@ class SendNotificationGroupView(APIView):
             )
 
             response = messaging.send(message)
-            return Response({"message_id": response})
+            return Response(
+                {"status": "success", "message_id": response},
+                status=status.HTTP_200_OK
+            )
+
         except Exception as e:
-            return Response({"error": f"Failed to send message: {str(e)}"}, status=500)
+            return Response(
+                {
+                    "status": "failed",
+                    "error": f"Failed to send message: {str(e)}"
+                },
+                status=status.HTTP_200_OK  # <-- returning 200 even on send failure
+            )
 
 
 class SendNotificationDeviceView(APIView):
@@ -171,13 +181,22 @@ class SendNotificationDeviceView(APIView):
 
         if not all([device_token, title, body]):
             return Response(
-                {"error": "device_token, title, and body are required."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {
+                    "success": False,
+                    "error": "device_token, title, and body are required."
+                },
+                status=status.HTTP_200_OK,
             )
 
         initialized, error_message = initialize_firebase_app()
         if not initialized:
-            return Response({"error": error_message}, status=500)
+            return Response(
+                {
+                    "success": False,
+                    "error": error_message
+                },
+                status=status.HTTP_200_OK,
+            )
 
         try:
             message = messaging.Message(
@@ -186,6 +205,13 @@ class SendNotificationDeviceView(APIView):
             )
 
             response = messaging.send(message)
-            return Response({"message_id": response})
+            return Response({
+                "success": True,
+                "message_id": response
+            }, status=status.HTTP_200_OK)
+
         except Exception as e:
-            return Response({"error": f"Failed to send message: {str(e)}"}, status=500)
+            return Response({
+                "success": False,
+                "error": "Notification sending failed."
+            }, status=status.HTTP_200_OK)
