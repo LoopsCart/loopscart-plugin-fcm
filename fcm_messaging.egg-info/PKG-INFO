@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: fcm_messaging
+Version: 0.1.0
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 4.2
+Requires-Dist: Django>=4.2.7
+Requires-Dist: firebase-admin>=5.0.0
+Requires-Dist: djangorestframework>=3.14.0
+Dynamic: classifier
+Dynamic: requires-dist
