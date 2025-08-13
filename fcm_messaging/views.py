@@ -3,12 +3,13 @@ import json
 import firebase_admin
 from firebase_admin import messaging
 from rest_framework import status
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import FCMCertificate, User
 from .serializers import FCMCertificateSerializer, UserSerializer
+from firebase_admin.messaging import TopicManagementResponse
 
 # APIs to test with Postman:
 
@@ -73,14 +74,14 @@ class GetUserView(APIView):
 class UserDetailView(APIView):
     def get(self, request):
         data = request.data
-        id = data.get("id")
+        username = data.get("username")
         if not id:
             return Response(
-                {"error": "id is required."},
+                {"error": "username is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            user_instance = User.objects.get(pk=id)
+            user_instance = User.objects.get(username=username)
             serializer = UserSerializer(user_instance)
             return Response(serializer.data)
         except User.DoesNotExist:
@@ -88,14 +89,14 @@ class UserDetailView(APIView):
 
     def delete(self, request):
         data = request.data
-        id = data.get("id")
+        username = data.get("username")
         if not id:
             return Response(
-                {"error": "id is required."},
+                {"error": "Username is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            user_instance = User.objects.get(pk=id)
+            user_instance = User.objects.get(username=username)
             user_instance.delete()
             return Response({"message": "User deleted"}, status=status.HTTP_204_NO_CONTENT)
         except User.DoesNotExist:
@@ -103,17 +104,16 @@ class UserDetailView(APIView):
 
     def post(self, request):
         data = request.data
-        name = data.get("name")
-        id = data.get("id")
+        username = data.get("username")
         token = data.get("token")
-        if not all([name, id, token]):
+        if not all([username, token]):
             return Response(
-                {"error": "name, id, and token are required."},
+                {"error": "username and token are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user_instance, created = User.objects.get_or_create(pk=id)
-        serializer = UserSerializer(user_instance, data={"name": name, "id": id, "token": token})
+        user_instance, created = User.objects.get_or_create(username=username)
+        serializer = UserSerializer(user_instance, data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -121,7 +121,7 @@ class UserDetailView(APIView):
 
 
 class CertificateUploadView(APIView):
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get(self, request):
         cert_instances = FCMCertificate.objects.all()
@@ -130,15 +130,14 @@ class CertificateUploadView(APIView):
         return Response(data)
 
     def post(self, request):
-        if FCMCertificate.objects.exists():
-            return Response(
-                {"error": "Only one FCM certificate can be uploaded."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        serializer = FCMCertificateSerializer(data=request.data)
+        instance = FCMCertificate.objects.first()
+        serializer = FCMCertificateSerializer(instance=instance, data=request.data)
+        
         if serializer.is_valid():
+            status_code = status.HTTP_200_OK if instance else status.HTTP_201_CREATED
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status_code)
+            
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
@@ -216,17 +215,17 @@ def initialize_firebase_app():
 class DeviceGroupView(APIView):
     def post(self, request):
         device_token = request.data.get("device_token")
-        user_id = request.data.get("user_id")
+        username = request.data.get("username")
         group_name = request.data.get("group_name")
         action = request.data.get("action")  # subscribe or unsubscribe
 
-        if not (device_token or user_id):
+        if not (device_token or username):
             return Response(
                 {"error": "Either device_token or user_id is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if device_token and user_id:
+        if device_token and username:
             return Response(
                 {"error": "Only one of device_token or user_id should be provided."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -244,9 +243,9 @@ class DeviceGroupView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if user_id:
+        if username:
             try:
-                user_instance = User.objects.get(pk=user_id)
+                user_instance = User.objects.get(username=username)
                 device_token = user_instance.token
             except User.DoesNotExist:
                 return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -261,7 +260,15 @@ class DeviceGroupView(APIView):
             elif action == "unsubscribe":
                 response = messaging.unsubscribe_from_topic(device_token, group_name)
 
-            return Response({"message": "Device token has been {} from {}".format(action, group_name), "response": response})
+            if isinstance(response, TopicManagementResponse):
+                response_data = {
+                    'success_count': response.success_count, 'failure_count': response.failure_count,
+                    'errors': [{'index': e.index, 'reason': e.reason} for e in response.errors]
+                    }
+            else:
+                response_data = {'message': 'Operation successful', 'result': str(response)}
+    
+            return Response({"message": "Device token has been {} to group {}".format(action, group_name), "result": response_data })
         except Exception as e:
             return Response(
                 {"error": f"Failed to {action} device token from group: {str(e)}"},
@@ -336,15 +343,15 @@ class SendNotificationDeviceView(APIView):
             return Response({"success": False, "error": "Notification sending failed."}, status=status.HTTP_200_OK)
 
 
-class SendNotificationViewById(APIView):
+class SendNotificationViewByUsername(APIView):
     def post(self, request):
-        user_id = request.data.get("id")
+        username = request.data.get("username")
         title = request.data.get("title")
         body = request.data.get("body")
 
-        if not all([user_id, title, body]):
+        if not all([username, title, body]):
             return Response(
-                {"success": False, "error": "id, title, and body are required."},
+                {"success": False, "error": "username, title, and body are required."},
                 status=status.HTTP_200_OK,
             )
 
@@ -356,7 +363,7 @@ class SendNotificationViewById(APIView):
             )
 
         try:
-            user_instance = User.objects.get(pk=user_id)
+            user_instance = User.objects.get(username=username)
             device_token = user_instance.token
             message = messaging.Message(
                 notification=messaging.Notification(title=title, body=body),

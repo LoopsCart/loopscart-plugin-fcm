@@ -5,8 +5,7 @@ from django.db import models
 
 
 class User(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    username = models.CharField(primary_key=True, max_length=255)
     token = models.CharField(max_length=255)
 
 
@@ -19,8 +18,8 @@ class FCMCertificate(models.Model):
     certificate_json = models.JSONField()
 
     def clean(self):
-        if self.name and FCMCertificate.objects.filter(name=self.name).exists() and not self.pk:
-            raise ValidationError("Only one certificate can exist with this name.")
+        # if self.name and FCMCertificate.objects.filter(name=self.name).exists() and not self.pk:
+            # raise ValidationError("Only one certificate can exist with this name.")
 
         if self.certificate_json:
             if isinstance(self.certificate_json, str):

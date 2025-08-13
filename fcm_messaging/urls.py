@@ -7,7 +7,7 @@ from .views import (
     SendNotificationDeviceView,
     SendNotificationGroupView,
     SendNotificationMultipleDevicesView,
-    SendNotificationViewById,
+    SendNotificationViewByUsername,
     UserDetailView,
 )
 
@@ -19,7 +19,7 @@ urlpatterns = [
     # path("fcm-config/user/<int:pk>/", UserDetailView.as_view(), name="user"),
     path("fcm-config/user/", UserDetailView.as_view(), name="user"),
     path("fcm-config/users/", GetUserView.as_view(), name="get all users"),
-    path("fcm-config/send-notification-user/", SendNotificationViewById.as_view(), name="send-notification-user"),
+    path("fcm-config/send-notification-user/", SendNotificationViewByUsername.as_view(), name="send-notification-user"),
     path(
         "fcm-config/send-notification-multiple-devices/",
         SendNotificationMultipleDevicesView.as_view(),

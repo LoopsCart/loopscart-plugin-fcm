@@ -12,4 +12,4 @@ class FCMCertificateSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "name", "token"]
+        fields = ["username", "token"]
