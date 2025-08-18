@@ -7,6 +7,7 @@ fcm_messaging/models.py
 fcm_messaging/serializers.py
 fcm_messaging/tests.py
 fcm_messaging/urls.py
+fcm_messaging/utils.py
 fcm_messaging/views.py
 fcm_messaging.egg-info/PKG-INFO
 fcm_messaging.egg-info/SOURCES.txt
@@ -14,4 +15,5 @@ fcm_messaging.egg-info/dependency_links.txt
 fcm_messaging.egg-info/requires.txt
 fcm_messaging.egg-info/top_level.txt
 fcm_messaging/migrations/0001_initial.py
+fcm_messaging/migrations/0002_fcmlog_userdevice_delete_user_and_more.py
 fcm_messaging/migrations/__init__.py
