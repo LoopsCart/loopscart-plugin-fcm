@@ -10,7 +10,6 @@ from fcm_messaging.utils import (
     initialize_firebase_app,
     send_message_token,
     send_message_tokens,
-    send_message_username,
     send_message_usernames,
 )
 
@@ -258,7 +257,7 @@ class SendNotificationToUsernameView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        success, message = send_message_username(title, body, username)
+        success, message = send_message_usernames(title, body, [username])
 
         return Response({"success": success, "detail": message}, status=status.HTTP_200_OK)
 

@@ -95,33 +95,32 @@ def send_message_usernames(title, body, usernames):
         return False, "Notification sending failed"
 
 
-def send_message_username(title, body, username):
-    """Sends a notification to a single username."""
-    initialized, message = initialize_firebase_app()
-    if not initialized:
-        return initialized, message
-    try:
-        user_devices = UserDevice.objects.filter(username=username)
-        tokens = [ud.token for ud in user_devices]
+# def send_message_username(title, body, username):
+#     """Sends a notification to a single username."""
+#     initialized, message = initialize_firebase_app()
+#     if not initialized:
+#         return initialized, message
+#     try:
+#         user_devices = UserDevice.objects.filter(username=username)
+#         tokens = [ud.token for ud in user_devices]
 
-        if not tokens:
-            return False, "No valid tokens found for the given username."
+#         if not tokens:
+#             return False, "No valid tokens found for the given username."
 
-        # Build multicast message
-        multicast_message = messaging.MulticastMessage(
-            notification=messaging.Notification(title=title, body=body),
-            tokens=tokens,
-        )
+#         # Build multicast message
+#         multicast_message = messaging.MulticastMessage(
+#             notification=messaging.Notification(title=title, body=body),
+#             tokens=tokens,
+#         )
 
-        # Send the message to all tokens at once
-        response = messaging.send_each_for_multicast(multicast_message)
-        log_fcm_response(usernames=username, message_title=title, message_body=body, response=response)
-        return True, format_batch_response(response)
-    except UserDevice.DoesNotExist:
-        return False, "User not found"
-    except Exception as e:
-        print(e)
-        return False, "Notification sending failed"
+#         # Send the message to all tokens at once
+#         response = messaging.send_each_for_multicast(multicast_message)
+#         log_fcm_response(usernames=username, message_title=title, message_body=body, response=response)
+#         return True, format_batch_response(response)
+#     except UserDevice.DoesNotExist:
+#         return False, "User not found"
+#     except Exception:
+#         return False, "Notification sending failed"
 
 
 def format_batch_response(response):
