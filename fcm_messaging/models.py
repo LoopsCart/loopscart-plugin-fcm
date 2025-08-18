@@ -77,6 +77,8 @@ class FCMLog(models.Model):
 
 class FCMCertificate(models.Model):
     certificate_json = models.JSONField()
+    firebase_config = models.JSONField()
+    vapid_key = models.CharField(max_length=255)
 
     def clean(self):
         # if self.name and FCMCertificate.objects.filter(name=self.name).exists() and not self.pk:

@@ -6,7 +6,7 @@ from .models import FCMCertificate, FCMLog, UserDevice
 class FCMCertificateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FCMCertificate
-        fields = ["certificate_json"]
+        fields = ["certificate_json", "firebase_config", "vapid_key"]
 
 
 class UserDeviceSerializer(serializers.ModelSerializer):
