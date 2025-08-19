@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     CertificateUploadView,
     DeviceGroupView,
+    FirebaseConfigView,
     GetUserDeviceView,
     SendNotificationGroupView,
     SendNotificationToTokensView,
@@ -13,6 +14,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path("config/", FirebaseConfigView.as_view(), name="firebase-config"),
     path("certificate/", CertificateUploadView.as_view(), name="certificate-management"),
     path("devices/", GetUserDeviceView.as_view(), name="list-devices"),
     path("device/", UserDeviceDetailView.as_view(), name="device-detail"),

@@ -33,6 +33,19 @@ from .serializers import FCMCertificateSerializer, UserDeviceSerializer
 #    Data: { "device_token": token, "title": title, "body": body }
 
 
+class FirebaseConfigView(APIView):
+    def get(self, request):
+        try:
+            cert_instance = FCMCertificate.objects.get(pk=1)  # Assuming a single certificate with pk=1
+            response_data = {
+                "firebase_config": cert_instance.firebase_config,
+                "vapid_key": cert_instance.vapid_key,
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
+        except FCMCertificate.DoesNotExist:
+            return Response({"error": "No FCM certificate found."}, status=status.HTTP_404_NOT_FOUND)
+
+
 # #########
 # CRUD for User and certificate
 
