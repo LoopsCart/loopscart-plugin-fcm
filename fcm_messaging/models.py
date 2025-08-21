@@ -35,7 +35,7 @@ class UserDevice(models.Model):
 
     # make platform ENUM?
     platform = models.CharField(max_length=255, null=True)  # android
-    is_dashbaord_login = models.BooleanField(default=False, null=True)  # True if is Admin
+    is_dashboard_login = models.BooleanField(default=False, null=True)  # True if is Admin
     is_active = models.BooleanField(default=True, help_text="Is this device active and able to receive notifications?")
 
     # --- Optional Device Info ---
