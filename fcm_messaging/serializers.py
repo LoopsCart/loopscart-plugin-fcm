@@ -12,7 +12,7 @@ class FCMCertificateSerializer(serializers.ModelSerializer):
 class UserDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserDevice
-        fields = ["username", "token", "uuid", "platform", "is_dashbaord_login", "is_active", "os_version", "device_model"]
+        fields = ["username", "token", "uuid", "platform", "is_dashboard_login", "is_active", "os_version", "device_model"]
 
 
 class FCMLogSerializer(serializers.ModelSerializer):
