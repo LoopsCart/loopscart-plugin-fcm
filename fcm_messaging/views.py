@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from fcm_messaging.utils import (
     initialize_firebase_app,
+    send_message_admin,
     send_message_token,
     send_message_tokens,
     send_message_usernames,
@@ -364,6 +365,22 @@ class SendNotificationGroupView(APIView):
                 {"status": "failed", "error": f"Failed to send message: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class SendNotificationAdminView(APIView):
+    def post(self, request):
+        title = request.data.get("title")
+        body = request.data.get("body")
+
+        if not all([title, body]):
+            return Response(
+                {"success": False, "error": "title, and body are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        success, message = send_message_admin(title, body)
+
+        return Response({"success": success, "detail": message}, status=status.HTTP_200_OK)
 
 
 #########################
