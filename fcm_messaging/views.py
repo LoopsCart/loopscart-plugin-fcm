@@ -136,7 +136,7 @@ class CertificateUploadView(APIView):
 
     def get(self, request):
         try:
-            cert_instance = FCMCertificate.objects.get(pk=1)  # Assuming a single certificate with pk=1
+            cert_instance = FCMCertificate.objects.first()
             serializer = FCMCertificateSerializer(cert_instance)
             return Response(serializer.data)
         except FCMCertificate.DoesNotExist:
