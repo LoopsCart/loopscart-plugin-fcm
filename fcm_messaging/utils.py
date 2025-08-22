@@ -63,7 +63,8 @@ def send_message_token(title, body, token):
         response = messaging.send(message)
         log_fcm_response(tokens=token, message_title=title, message_body=body, response=response)
         return True, response
-    except Exception:
+    except Exception as e:
+        print(e)
         return False, "Notification sending failed"
 
 
