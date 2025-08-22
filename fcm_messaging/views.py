@@ -143,13 +143,18 @@ class CertificateUploadView(APIView):
             return Response({"error": "No FCM certificate found."}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request):
-        instance, created = FCMCertificate.objects.get_or_create(pk=1)
+        instance = FCMCertificate.objects.first()
 
-        serializer = FCMCertificateSerializer(instance, data=request.data, partial=True)
+        if instance:
+            # If instance exists, update it
+            serializer = FCMCertificateSerializer(instance, data=request.data)
+        else:
+            # If instance does not exist, create a new one
+            serializer = FCMCertificateSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save()
-            status_code = status.HTTP_200_OK if not created else status.HTTP_201_CREATED
+            status_code = status.HTTP_201_CREATED if instance is None else status.HTTP_200_OK
             return Response(serializer.data, status=status_code)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
