@@ -43,8 +43,8 @@ def send_message_tokens(title, body, tokens):
 
         # Send the message to all tokens at once
         response = messaging.send_each_for_multicast(multicast_message)
-        log_fcm_response(tokens=tokens, message_title=title, message_body=body, response=response)
-        return True, format_batch_response(response)
+        success = log_fcm_response(tokens=tokens, message_title=title, message_body=body, response=response)
+        return success, format_batch_response(response)
     except Exception as e:
         print(e)
         return False, "Notification sending failed"
@@ -61,8 +61,8 @@ def send_message_token(title, body, token):
             token=token,
         )
         response = messaging.send(message)
-        log_fcm_response(tokens=token, message_title=title, message_body=body, response=response)
-        return True, response
+        success = log_fcm_response(tokens=token, message_title=title, message_body=body, response=response)
+        return success, response
     except Exception as e:
         print(e)
         return False, "Notification sending failed"
@@ -88,8 +88,8 @@ def send_message_usernames(title, body, usernames):
 
         # Send the message to all tokens at once
         response = messaging.send_each_for_multicast(multicast_message)
-        log_fcm_response(usernames=usernames, message_title=title, message_body=body, response=response)
-        return True, format_batch_response(response)
+        success = log_fcm_response(usernames=usernames, message_title=title, message_body=body, response=response)
+        return success, format_batch_response(response)
     except UserDevice.DoesNotExist:
         return False, "One or more users not found"
     except Exception:
@@ -116,8 +116,8 @@ def send_message_admin(title, body):
 
         # Send the message to all tokens at once
         response = messaging.send_each_for_multicast(multicast_message)
-        log_fcm_response(usernames=usernames, message_title=title, message_body=body, response=response)
-        return True, format_batch_response(response)
+        success = log_fcm_response(usernames=usernames, message_title=title, message_body=body, response=response)
+        return success, format_batch_response(response)
     except UserDevice.DoesNotExist:
         return False, "Users not found"
     except Exception:
@@ -225,3 +225,4 @@ def log_fcm_response(message_body, response, usernames=None, tokens=None, messag
         failure_count=failure_count,
         responses=responses_list,
     )
+    return success_count > 0
